@@ -3,6 +3,7 @@ package nottanengine;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
+import util.Time;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
@@ -13,14 +14,36 @@ public class Window {
     int width, height;
     String title;
     private long glfwWindow;
+    public float r, g, b, a;
 
     private static Window window = null;
+
+    private static Scene currentScene;
 
     private Window() {
         // Private so that only one Window class exists.
         this.width = 1920;
         this.height = 1080;
         this.title = "ItsAMeMario";
+        r = 1.0f;
+        g = 1.0f;
+        b = 1.0f;
+        a = 0.0f;
+    }
+
+    public static void changeScene(int newScene) {
+        switch (newScene) {
+            case 0:
+                currentScene = new LevelEditorScene();
+//                currentScene.init();
+                break;
+            case 1:
+                currentScene = new LevelScene();
+                break;
+            default:
+                assert false : "Unknown scene '" + newScene + "'";
+                break;
+        }
     }
 
     public static Window get() {
@@ -95,17 +118,32 @@ public class Window {
 
         // Makes the bindings available for use.
         GL.createCapabilities();
+
+        Window.changeScene(0);
     }
 
     public void loop() {
+        float beginTime = Time.getTime();
+        float endTime = Time.getTime();
+        float dt = -1.0f;
+
         while (!glfwWindowShouldClose(glfwWindow)) {
             // Poll events.
             glfwPollEvents();
 
-            glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+            glClearColor(r, g, b, a);
             glClear(GL_COLOR_BUFFER_BIT);
 
+            if (dt >= 0) {
+                currentScene.update(dt);
+            }
+
             glfwSwapBuffers(glfwWindow);
+
+            // dt means delta time. It is the time taken for this specific frame.
+            endTime = Time.getTime();
+            dt = endTime - beginTime;
+            beginTime = endTime;
         }
     }
 }
